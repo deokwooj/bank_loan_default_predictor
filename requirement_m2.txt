@@ -1,0 +1,12 @@
+tensorflow
+torch
+jax-metal
+mlx
+scikit-learn
+matplotlib
+pandas
+scipy
+numpy
+ipython
+jupyterlab
+notebook

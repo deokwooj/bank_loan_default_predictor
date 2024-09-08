@@ -1,74 +1,9 @@
-# Experiment script
-"""  Bank’s loan applicants synthetic dataset build a ML model that predicts whether an applicant would default or pay back the loan."""
-"""
-Data Description:
-
-This dataset  is loan data. When a customer applies for a loan, banks and other credit providers use models to determine 
-whether to grant the loan based on the likelihood of the loan being repaid. You must implement a model 
-that predicts loan repayment or default based on the data provided.
-
-The dataset consists of synthetic data that is designed to exhibit similar characteristics to genuine loan data.
-Explore the dataset, do the necessary data analysis, and implement a ML model to determine the best way to predict 
-whether a loan applicant will fully repay or default on a loan.
-"""
-
-"""
-Data Columns:
-
-The dataset consists of the following fields:
-
-• Loan ID: A unique Identifier for the loan information.
-
-• Customer ID: A unique identifier for the customer. Customers may have more than one loan.
-
-• Loan Status: A categorical variable indicating if the loan was paid back or defaulted. – Target variable
-
-• Current Loan Amount: This is the loan amount that was either completely paid off, or the amount that was defaulted.
-
-• Term: A categorical variable indicating if it is a short term or long term loan.
-
-• Credit Score: A value between 0 and 800 indicating the riskiness of the borrowers credit history.
-
-• Years in current job: A categorical variable indicating how many years the customer has been in their current job.
-
-• Home Ownership: Categorical variable indicating home ownership. Values are "Rent", "Home Mortgage", and "Own". 
-   If the value is OWN, then the customer is a home owner with no mortgage
-
-• Annual Income: The customer's annual income
-
-• Purpose: A description of the purpose of the loan.
-
-• Monthly Debt: The customer's monthly payment for their existing loans
-
-• Years of Credit History: The years since the first entry in the customer’s credit history • 
-   Months since last delinquent: Months since the last loan delinquent payment
-
-• Number of Open Accounts: The total number of open credit cards
-
-• Number of Credit Problems: The number of credit problems in the customer records.
-
-• Current Credit Balance: The current total debt for the customer
-
-• Maximum Open Credit: The maximum credit limit for all credit sources.
-
-• Bankruptcies: The number of bankruptcies
-
-• Tax Liens: The number of tax liens.
-"""
-import pandas as pd
-from matplotlib import pyplot as plt
-import numpy as np
-
-#breakpoint()
-
+import scipy
 import matplotlib
-import matplotlib.pyplot as plt
-plt.ion()
-plt.plot(range(10))
-plt.show(block=True)
 
-plt.plot(range(20))
-plt.plot(range(40))
+import pandas as pd
+import numpy as np
+from matplotlib import pyplot as plt
 
 def plot_cols(df, res_cols, cols, n_r, style='-', figname=None, figsize=None):
     n_c = int(np.ceil(len(cols) / n_r))
@@ -81,17 +16,17 @@ def plot_cols(df, res_cols, cols, n_r, style='-', figname=None, figsize=None):
         ax.set_title(k, fontsize=8)
         ax.set_xticks([])
 
+    plt.show(block=True)
     return fig, axes
 
 
 df = pd.read_csv('Loan Granting Binary Classification.csv', thousands=',')
-
 df = df.dropna()
-
-print(df.head(3))
+print(df.head(5))
 print(df.describe())
 print(df.nunique())
 print(df.dtypes)
+
 assert not df.isnull().values.any()
 
 res_cols = ['Loan Status']  # response output cols
@@ -103,22 +38,6 @@ input_cols = cat_cols + num_cols
 
 assert df['Loan ID'].nunique() == df['Customer ID'].nunique()
 print(df.shape[0])
-
-if 0:
-    print(len(df.columns))  # -> 19 cols
-    print('-' * 30)
-    print('c_ratio')
-    print('-' * 30)
-    for k, v in df.nunique().items():
-        c_ratio = v / df.shape[0]
-        print(f'{k}  -> {c_ratio:.4f}')
-        if c_ratio < 1.e-4:
-            cat_cols.append(k)
-        else:
-            num_cols.append(v)
-    print('-' * 30)
-
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
 print('-' * 20)
 print('categorical var')
@@ -134,23 +53,29 @@ for col in num_cols:
     print(col)
 print('-' * 20)
 
-##################################################################
+breakpoint()
+
+#################################################################
 # Categorical Label encoding
 ##################################################################
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 trfm_dict = dict()
 for col in cat_cols + res_cols:
     print(col)
     le = LabelEncoder()
     x = df[col].to_numpy().astype('str')
     x = le.fit_transform(x)
-    df.loc[:,col] = x
+    df[col] = x
     trfm_dict[col] = le
 
-if 0:
-    fig, axes = plot_cols(df, res_cols, num_cols, 4, figname='num_cols', figsize=(10, 8))
-    fig, axes = plot_cols(df, res_cols, cat_cols, 2, style='.', figname='num_cols', figsize=(10, 8))
 
-##################################################################
+fig, axes = plot_cols(df, res_cols, num_cols, 4, figname='num_cols', figsize=(10, 8))
+
+
+fig, axes = plot_cols(df, res_cols, cat_cols, 2, style='.', figname='num_cols', figsize=(10, 8))
+
+
+#################################################################
 # Numpy data array generation
 ##################################################################
 # input numerical x
@@ -171,7 +96,7 @@ print('=' * 100)
 print(f'default_rate = {100 * default_rate:.2f}% out of num_cases = {num_cases}')
 print(f'num_loan_app = {num_loan_app}, num_cstm_app = {num_cstm_app}')
 print('=' * 100)
-##################################################################
+################################################################
 
 ##################################################################
 # Train/Validation/Test data generation
@@ -186,7 +111,8 @@ X = np.hstack([x_num, x_cat])
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, shuffle=True)
 
-##################################################################
+
+#################################################################
 # Model Build
 ##################################################################
 # Start to build model from here
@@ -205,12 +131,20 @@ from sklearn.utils import Bunch
 preproc_kwargs = Bunch(x_num_idx=x_num_idx, use_feature_sel=True,
                        use_cat=True, use_hot_enc=True,
                        var_threshold=1.e-3, kbest_p_val_threshold=1.e-3)
-preproc = Preprocessor(**preproc_kwargs)
 
+"""
+preproc_kwargs = Bunch(x_num_idx=x_num_idx, use_feature_sel=False,
+                       use_cat=False, use_hot_enc=False,
+                       var_threshold=1.e-3, kbest_p_val_threshold=1.e-3)
+"""
+preproc = Preprocessor(**preproc_kwargs)
+print(X_test.shape)
+print(X_train.shape)
 preproc.fit(X_train, y_train)
 print(X_train.shape)
 X_train = preproc.transform(X_train)
-print(X_train.shape)
+
+
 
 ##################################################################
 # KNN model fit
@@ -255,6 +189,7 @@ logi = LogisticRegression(**logi_kwargs)
 logi.fit(X_train, y_train.flatten())
 acc, prec, rec, conf_mat = evaluate(preproc, logi, X_test, y_test)
 
+
 ##################################################################
 # RandomForestClassifier Model
 ##################################################################
@@ -267,6 +202,7 @@ rforest_kwargs = Bunch(n_estimators=200, criterion='entropy', max_depth=50, n_jo
 rforest = RandomForestClassifier(**rforest_kwargs)
 rforest.fit(X_train, y_train.flatten())
 acc, prec, rec, conf_mat = evaluate(preproc, rforest, X_test, y_test)
+
 
 ##################################################################
 # Ensemble Model
@@ -291,12 +227,6 @@ ens_clf.evaluate(X_test, y_test)
 ############################################################
 # TensorFlow model
 ############################################################
-# model develop --> test
-
-
-
-
-############################################################
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, shuffle=True)
 print('*'*50)
 print('NN Embedding Dense Model')
@@ -308,65 +238,73 @@ preproc_kwargs = Bunch(x_num_idx=x_num_idx, use_feature_sel=False,
 
 from emb_dense import EmbDense
 emden= EmbDense(prerpoc_kwargs = preproc_kwargs,dense_cells=[16, 8, 4])
-
 emden.fit(X_train,y_train, epochs = 20, validation_split =0.2)
-emden.summary()
-emden.plot_history()
-emden.evaluate(X_test, y_test)
+
+X, y = X_train,y_train
+preproc = Preprocessor(**preproc_kwargs)
+preproc.fit(X,y)
+X = preproc.transform(X)
+xx_cat = preproc.get_x_cat(X)
+xx_num = preproc.get_x_num(X)
+cat_sizes = xx_cat.max(axis=0).astype(int)
+n_cat = xx_cat.shape[1]
+n_num = xx_num.shape[1]
+n_dim = X.shape[1]
+print(f'n_cat->{n_cat}, n_num->{n_num}, n_dim->{n_dim}')
+assert n_cat + n_num == n_dim
+assert len(cat_sizes) == n_cat
+import tensorflow as tf
+x_in = tf.keras.layers.Input(shape=(n_dim,), name='model_input')
+x_num = x_in[..., :x_num_idx]
+x_cat = x_in[..., x_num_idx:]
+dense_cells=[16, 8, 4]
+
+cat_emb_out = []
+for i, cat_size in enumerate(cat_sizes):
+    x_cat_i = x_cat[..., i:i + 1]
+    x_cat_i_out = tf.keras.layers.Embedding(input_dim=cat_size + 1,
+                            output_dim=(cat_size + 1) // 2,
+                            name=f'emb_{i}')(x_cat_i)
+    x_cat_i_out = tf.keras.layers.Flatten()(x_cat_i_out)
+    print(x_cat_i_out.shape)
+    cat_emb_out.append(x_cat_i_out)
+
+x_cat_emb_concat = tf.keras.layers.Concatenate(name='cat_emb_concat')(cat_emb_out)
+x_num_cat_emb_concat = tf.keras.layers.Concatenate(name='num_cat_emb_concat')([x_num, x_cat_emb_concat])
+x_dense = x_num_cat_emb_concat
+for num_cell in dense_cells:
+    x_dense = tf.keras.layers.Dense(units=num_cell, activation='relu')(x_dense)
+
+x_out = tf.keras.layers.Dense(1, activation='sigmoid')(x_dense)
+nn_clf  = tf.keras.models.Model(inputs=[x_in], outputs=[x_out])
+nn_clf.summary()
+nn_clf.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+X = preproc.transform(X)
+epochs = 100
+validation_split =0.2
+nn_clf.fit(X, y, epochs=epochs, validation_split=validation_split)
+history = nn_clf.history.history
+
+plt.plot(history['loss'], label='loss')
+plt.plot(history['val_loss'], label='val_loss')
+plt.legend()
+plt.show(block=True)
+
+xx= preproc.transform(X_test)
+y_pred = nn_clf.predict(xx)
+y_pred = (y_pred  > 0.5).astype(int)
+acc = accuracy_score(y_test, y_pred)
+prec = precision_score(y_test, y_pred)
+rec = recall_score(y_test, y_pred)
 
 
-import numpy as np
-from sklearn.decomposition import PCA
-X = np.array([[-1, -1], [-2, -1], [-3, -2], [1, 1], [2, 1], [3, 2]])
-X
-pca = PCA(n_components=2)
-pca.fit(X)
-pca.fit_transform(X)
-print(pca.explained_variance_ratio_)
-print(pca.singular_values_)
 
 
-import matplotlib.pyplot as plt
-
-# unused but required import for doing 3d projections with matplotlib < 3.2
-import mpl_toolkits.mplot3d  # noqa: F401
-import numpy as np
-
-from sklearn import datasets, decomposition
-
-np.random.seed(5)
-
-iris = datasets.load_iris()
-X = iris.data
-y = iris.target
-
-fig = plt.figure(1, figsize=(4, 3))
-plt.clf()
-
-ax = fig.add_subplot(111, projection="3d", elev=48, azim=134)
-ax.set_position([0, 0, 0.95, 1])
 
 
-plt.cla()
-pca = decomposition.PCA(n_components=3)
-pca.fit(X)
-X = pca.transform(X)
 
-for name, label in [("Setosa", 0), ("Versicolour", 1), ("Virginica", 2)]:
-    ax.text3D(
-        X[y == label, 0].mean(),
-        X[y == label, 1].mean() + 1.5,
-        X[y == label, 2].mean(),
-        name,
-        horizontalalignment="center",
-        bbox=dict(alpha=0.5, edgecolor="w", facecolor="w"),
-    )
-# Reorder the labels to have colors matching the cluster results
-y = np.choose(y, [1, 2, 0]).astype(float)
-ax.scatter(X[:, 0], X[:, 1], X[:, 2], c=y, cmap=plt.cm.nipy_spectral, edgecolor="k")
 
-ax.xaxis.set_ticklabels([])
-ax.yaxis.set_ticklabels([])
-ax.zaxis.set_ticklabels([])
 
-plt.show()
+
+

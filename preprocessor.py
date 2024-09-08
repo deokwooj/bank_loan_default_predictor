@@ -26,7 +26,7 @@ class Preprocessor:
         self.use_cat = use_cat
         self.use_hot_enc = use_hot_enc
         if self.use_hot_enc:
-            self.cat_he = OneHotEncoder(sparse=False)
+            self.cat_he = OneHotEncoder(sparse_output=False)
         else:
             self.cat_he = None
 
